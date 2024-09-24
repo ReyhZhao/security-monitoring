@@ -24,7 +24,10 @@ NG FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
       <ProcessCreate onmatch="exclude">
 	<Rule name="TechniqueID=T1059.004,TechniqueName=Command and Scripting Interpreter: Unix Shell" groupRelation="or">
 	  <CurrentDirectory condition="contains">/var/snap/microk8s/</CurrentDirectory>
-	  <CurrentDirectory condition="contains">/var/ossec/</CurrentDirectory>
+	  <CurrentDirectory condition="contains">/var/ossec</CurrentDirectory>
+	</Rule>
+	<Rule name="TechniqueID=T1105,TechniqueName=Ingress Tool Transfer" groupRelation="or">
+	  <CurrentDirectory condition="contains">/usr/share/elasticsearch</CurrentDirectory>	
 	</Rule>
       </ProcessCreate>
 
