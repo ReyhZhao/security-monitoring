@@ -1,0 +1,5 @@
+<decoder name="paloalto_failed_login">
+    <prematch>\.*failed\sauthentication\sfor\suser</prematch>
+    <regex>user\s'(\S+)'.*profile\s'(.*)',\svsys.*From:\s(\d+.\d+.\d+.\d+)</regex>
+    <order>srcuser, srcip, profile</order>
+</decoder>
