@@ -96,7 +96,7 @@
 
 
 <group name="vaultwarden_rules,">
-  <rule id="100200" level="12">
+  <rule id="100200" level="7">
     <decoded_as>vaultwarden-login-failure</decoded_as>
     <if_sid>1002</if_sid>
     <match>vaultwarden::api::identity][ERROR</match>
@@ -108,6 +108,19 @@
     <match>vaultwarden::api::identity][INFO</match>
     <description>Vaultwarden login success</description>
   </rule>
+  
+  <rule id="100202" level="9" frequency="3" timeframe="300">
+    <if_matched_sid>100200</if_matched_sid>
+    <same_srcip />
+    <description>Multiple failed logins to Vaultwarden detected.</description>
+  </rule>  
+  
+  <rule id="100203" level="12" frequency="2" timeframe="3600">
+    <if_matched_sid>100202</if_matched_sid>
+    <if_sid>100201</if_sid>
+    <same_srcip />
+    <description>Vaultwarden - Successful and failed auth from same IP.</description>
+  </rule>    
 </group>
 
 <group name="exclude_rules,">
