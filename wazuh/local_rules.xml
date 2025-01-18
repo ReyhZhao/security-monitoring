@@ -5,6 +5,15 @@
 
 <!-- Example -->
 
+<group name="pci_dss_10.6.1,pci_dss_10.2.6,gpg13_10.1,gdpr_IV_35.7.d,">
+    <rule id="100304" level="3">
+      <if_sid>500</if_sid>
+      <match>Agent disconnected</match>
+      <description>Wazuh agent disconnected.</description>
+    </rule>
+</group>  
+
+  
 <group name="authentik,">
   <rule id="100300" level="3">
     <decoded_as>authentik</decoded_as>
@@ -70,14 +79,25 @@
     </mitre>
     <group>authentication_failures,gdpr_IV_35.7.d,gdpr_IV_32.2,gpg13_7.1,hipaa_164.312.b,nist_800_53_AU.14,nist_800_53_AC.7,nist_800_53_SI.4,pci_dss_10.2.4,pci_dss_10.2.5,pci_dss_11.4,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
   </rule>  
- 
   
-  <rule id="100604" level="12" frequency="2" timeframe="3600">
-    <if_matched_sid>100603</if_matched_sid>
+  <rule id="100605" level="10">
     <if_sid>5715</if_sid>
-    <same_srcip />
-    <description>Linux SSHD - Successful and failed auth from same IP.</description>
-  </rule>      
+    <srcip negate="yes">192.168.232.119</srcip>
+    <srcip negate="yes">77.174.173.202</srcip>
+    <hostname negate="yes">deadalus</hostname>
+    <description>Linux SSHD - Login from unusual srcip.</description>
+  </rule>   
+  
+  <rule id="100606" level="0">
+    <if_sid>100605</if_sid>
+    <match type="pcre2">for ansible from</match>
+    <description>Exclude Ansible - Linux SSHD - Login from unusual srcip.</description>
+  </rule>     
+  <rule id="100607" level="0">
+    <if_sid>100605</if_sid>
+    <match type="pcre2">for veeam from</match>
+    <description>Exclude Veeam - Linux SSHD - Login from unusual srcip.</description>
+  </rule>     
   
 </group>
 
@@ -153,6 +173,7 @@
 </group>
 
 <group name="exclude_rules,">
+ 
   <rule id="101020" level="0">
     <if_sid>31101</if_sid>
     <list field="srcip" lookup="address_match_key">etc/lists/private_ranges</list>
@@ -163,7 +184,7 @@
   
   <rule id="101021" level="0">
     <if_sid>5134</if_sid>    
-    <match>failures: 0</match>
+    <match>rngd</match>
     <description>Ignore	RNGD failure</description> 
   </rule>  
   
@@ -205,6 +226,16 @@
     <match>favicon.ico</match>
     <description>Ignore 503 errors for favicon.ico</description> 
   </rule>  
+  
+  <rule id="101029" level="0">
+    <if_sid>31162</if_sid>    
+    <!--<srcip negate="yes">192.168.232.119</srcip>-->
+    <srcip>192.168.232.254</srcip>
+    
+    <description>Ignore web server 500 error codes Private IP</description> 
+    <group>attack, web, accesslog</group>
+  </rule>
+  
 </group>
 
 <group name="Exclude_PS_Test">
@@ -255,6 +286,13 @@
     <description>Multiple Palo Alto failed login event.</description>
   </rule>   
   
+  <rule id="103005" level="10" frequency="100" timeframe="300">
+    <if_matched_sid>64508</if_matched_sid>
+    <same_field>srcip</same_field>
+    <description>Possible port scan detected from $(srcip)</description>
+  </rule>     
+  
+  
 </group>
 
 <group name="local,syslog,sshd,">
@@ -272,3 +310,185 @@
 </group>
 
 
+<group name="razr, ransomware, malware">
+
+<!-- Encryption of system files -->
+  <rule id="111900" level="2">
+    <if_sid>61613</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)[C-Z]:.*\\\\.*.exe</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)[C-Z]:.*\\\\.*.raz$</field>
+    <description>Razr ransomware executable $(win.eventdata.image) has encrypted the $(win.eventdata.targetFilename) file.</description>
+    <mitre>
+      <id>T1486</id>
+      <id>T1036.005</id>
+    </mitre>
+  </rule>
+ 
+ <!-- Encryption of system files -->
+  <rule id="111901" level="15" timeframe="100" frequency="5" ignore="30">
+    <if_matched_sid>111900</if_matched_sid>
+    <description>Multiple files have been encrypted by Razr ransomware $(win.eventdata.image) using the ".raz" extension.</description>
+    <mitre>
+      <id>T1486</id>
+      <id>T1036.005</id>
+    </mitre>
+  </rule>
+
+<!-- Ransome note file creation -->
+  <rule id="111902" level="2">
+    <if_sid>61613</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)[C-Z]:.*\\\\.*.exe</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)[C-Z]:.*\\\\README.txt</field>
+    <description>Possible Razr ransomware detected. A ramsomeware note $(win.eventdata.targetFilename) has been created.</description>
+    <mitre>
+      <id>T1486</id>
+    </mitre>
+  </rule>
+ 
+ <!-- Ransome note file creation -->
+  <rule id="111903" level="12" timeframe="100" frequency="5" ignore="30">
+    <if_matched_sid>111902</if_matched_sid>
+    <description>Possible Razr ransomware detected. Multiple ramsomeware notes (README.txt) have been created by $(win.eventdata.image).</description>
+    <mitre>
+      <id>T1486</id>
+    </mitre>
+  </rule>
+
+</group>
+
+
+<group name="deerstealer, stealer-malware,">
+
+<!-- Persistence detection -->
+  <rule id="111200" level="12">
+    <if_sid>61609</if_sid>
+    <field name="win.eventdata.image" type="pcre2">\\\\(Windows|Users)\\\\.+\\\\(skotes|cmd|ActiveISO|sxqnmytm|DllHost|(?!(svchost.exe|powershell.exe))\w+).exe</field>
+    <field name="win.eventdata.imageLoaded" type="pcre2">\\\\Windows\\\\SysWOW64.+(mstask|Bichromate|msvcp140|Qt5Core|Qt5Gui|Qt5Network|Qt5PrintSupport|Qt5Widgets|StarBurn|vcruntime140|msvcp140).+dll</field>
+    <description>Possible DeerStealer malware detected. New scheduled task: $(win.eventdata.imageLoaded) was created by: $(win.eventdata.image).</description>
+    <mitre>
+      <id>T1053.005</id>
+    </mitre>
+  </rule>
+
+<!-- Malicious file creation -->
+  <rule id="111201" level="12">
+    <if_sid>61613</if_sid>
+    <field name="win.eventdata.image" type="pcre2">\\\\(Windows|Users)\\\\.+\\\\(skotes|cmd|(?!(svchost.exe))\w+).exe</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">\\\\(Windows|Users)\\\\.+\\\\(skotes|ActiveISO|sxqnmytm|DllHost|CHROME.EXE|ELEVATION_SERVICE.EXE|SKOTES.EXE)(.job|.exe|.pf|.js)</field>
+    <description>Possible DeerStealer malware activity detected. Malicious file created at $(win.eventdata.targetFilename) by $(win.eventdata.image).</description>
+    <mitre>
+      <id>T1059</id>
+      <id>T1105</id>
+    </mitre>
+  </rule>
+
+
+<!-- Executable dropped in Malicious location -->
+  <rule id="111202" level="12">
+    <if_sid>92213</if_sid>
+    <field name="win.eventdata.image" type="pcre2">\\\\(Windows|Users)\\\\.+\\\\(svchost|skotes|cmd|\w+|\d+).exe</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">\\\\Users\\\\.+\\\\AppData\\\\Local\\\\.+(skotes|ActiveISO|sxqnmytm|DllHost)|(.job|.exe|.pf|.js)</field>
+    <description>Possible DeerStealer malware activity detected. Executable file dropped in folder commonly used by malware: $(win.eventdata.targetFilename).</description>
+    <mitre>
+      <id>T1105</id>
+      <id>T1059</id>
+    </mitre>
+  </rule>
+
+<!-- Process creation -->
+  <rule id="111203" level="12">
+    <if_sid>61603</if_sid>
+    <field name="win.eventdata.commandLine" type="pcre2">\\\\Users\\.+\\\\AppData\\\\Local\\\\Temp\\\\.+skotes.exe</field>
+    <description>Possible DeerStealer malware executable: $(win.eventdata.commandLine) was run.</description>
+    <mitre>
+      <id>T1543</id>
+    </mitre>
+  </rule>
+
+<!-- Network connection to C2 server -->
+  <rule id="111204" level="12">
+    <if_sid>61605</if_sid>
+    <field name="win.eventdata.image" type="pcre2">\\\\Users\\\\.+\\\\AppData\\\\Local\\\\Temp\\\\.+\\\\(skotes|\w+).exe</field>
+    <field name="win.system.message" type="pcre2">Network connection detected</field>
+      <field name="win.eventdata.destinationPort" type="pcre2">80</field>
+    <description>Possible DeerStealer network connection to C2 server: $(win.eventdata.destinationIp) on port: $(win.eventdata.destinationPort).</description>
+    <mitre>
+      <id>T1105</id>
+    </mitre>
+  </rule>
+
+<!-- Registry tampering - targeting HKLM -->
+  <rule id="111205" level="12">
+    <if_sid>61614, 61615</if_sid>
+    <field name="win.eventdata.image" type="pcre2">\\\\(Windows|Users)\\\\.+\\\\(skotes|cmd|karat|(?!(svchost.exe))\w+).exe</field>
+    <field name="win.eventdata.eventType" type="pcre2">(CreateKey|SetValue)</field>
+    <field name="win.eventdata.targetObject" type="pcre2">HKLM\\\\(System|SOFTWARE)\\\\(CurrentControlSet|Microsoft)\\\\(Control|Windows NT|Services)\\\\(SecurityProviders|CurrentVersion|bam)\\\\.+\\\\(skotes|ActiveISO|sxqnmytm|DllHost|msedge|chrome|cmd).exe</field>
+    <description>Possible DeerStealer malware executable, $(win.eventdata.image) performed $(win.eventdata.eventType) on $(win.eventdata.targetObject).</description>
+    <mitre>
+      <id>T1543</id>
+      <id>T1053.005</id>
+    </mitre>
+  </rule>
+
+<!-- Registry tampering - targeting HKU for persistence on next logon -->
+  <rule id="111206" level="12">
+    <if_sid>61614, 61615, 92300</if_sid>
+    <field name="win.eventdata.image" type="pcre2">\\\\(Windows|Users)\\\\.+\\\\(skotes|cmd|karat(?!(svchost.exe))).exe</field>
+    <field name="win.eventdata.eventType" type="pcre2">(CreateKey|SetValue)</field>
+    <field name="win.eventdata.targetObject" type="pcre2">HKU\\\\.+\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run\\\\.+exe</field>
+    <description>Possible DeerStealer malware executable, $(win.eventdata.image) performed $(win.eventdata.eventType) on $(win.eventdata.targetObject).</description>
+    <mitre>
+      <id>T1547</id>
+      <id>T1053.005</id>
+    </mitre>
+  </rule>
+
+</group>
+
+
+<group name="windows,sysmon,blx_detection_rule,">
+<!-- Blx drops powershell script -->
+  <rule id="101300" level="10">
+    <if_sid>92200</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\\\.+(exe|dll|bat|msi)</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)\\\\temp.ps1</field>
+    <description>Possible BLX stealer activity detected: A rogue powershell script was dropped to system.</description>
+    <mitre>
+      <id>T1105</id>
+    </mitre>
+  </rule>
+
+<!-- Blx starts a command prompt to execute previously dropped script -->
+  <rule id="101310" level="10">
+    <if_sid>92052</if_sid>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)\\\\.+(exe|dll|bat|msi)</field>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\\\Windows\\\\System32\\\\cmd.exe</field>
+    <field name="win.eventdata.commandLine" type="pcre2">powershell.exe -ExecutionPolicy Bypass -File</field>
+    <description>Possible BLX stealer activity detected: Rogue powershell script execution.</description>
+    <mitre>
+      <id>T1059.003</id>
+    </mitre>
+  </rule>
+
+<!-- Blx dropped an executable to temp folder -->
+  <rule id="101320" level="10">
+    <if_sid>92213</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\\\.+(exe|dll|bat|msi)</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)\\\\Users\\\\[^\\\\]+\\\\AppData\\\\Local\\\\Temp\\\\decrypted_executable.exe</field>
+    <description>Possible BLX stealer activity detected: Rogue executable was dropped to system.</description>
+    <mitre>
+      <id>T1105</id>
+    </mitre>
+  </rule>
+
+<!-- Rogue executable copies itself to users' startup folder for persistence -->
+  <rule id="101330" level="10">
+    <if_sid>61613</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\\\Users\\\\[^\\\\]+\\\\AppData\\\\Local\\\\Temp\\\\decrypted_executable.exe</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">(?i)\\\\Users\\\\[^\\\\]+\\\\AppData\\\\Roaming\\\\Microsoft\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup\\\\decrypted_executable.exe</field>
+    <description>Possible BLX stealer persistence activity detected: Rogue executable was copied to users' startup folder to establish persistence.</description>
+    <mitre>
+      <id>T1547.001</id>
+    </mitre>
+  </rule>
+</group>
