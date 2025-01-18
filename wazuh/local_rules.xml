@@ -6,7 +6,7 @@
 <!-- Example -->
 
 <group name="pci_dss_10.6.1,pci_dss_10.2.6,gpg13_10.1,gdpr_IV_35.7.d,">
-    <rule id="100304" level="3">
+    <rule id="100304" level="9">
       <if_sid>500</if_sid>
       <match>Agent disconnected</match>
       <description>Wazuh agent disconnected.</description>
@@ -84,7 +84,8 @@
     <if_sid>5715</if_sid>
     <srcip negate="yes">192.168.232.119</srcip>
     <srcip negate="yes">77.174.173.202</srcip>
-    <hostname negate="yes">deadalus</hostname>
+    <!--<hostname negate="yes">deadalus</hostname>-->
+    <field name="agent.name" negate="yes">deadalus</field>
     <description>Linux SSHD - Login from unusual srcip.</description>
   </rule>   
   
