@@ -5,6 +5,22 @@
 
 <!-- Example -->
 
+<group name="vulnerability-detector-custom">
+  <rule id="23505" level="10" frequency="5" timeframe="360">
+    <if_matched_sid>23501</if_matched_sid>
+    <description>Multiple high severity vulnerabilities detected.</description>
+  </rule>
+
+  <rule id="103102" level="10" frequency="3" timeframe="360">
+    <if_matched_sid>23506</if_matched_sid>
+    <description>Multiple critical severity vulnerabilities detected.</description>
+  </rule>  
+
+</group>
+
+
+
+
 <group name="pci_dss_10.6.1,pci_dss_10.2.6,gpg13_10.1,gdpr_IV_35.7.d,">
     <rule id="100304" level="9">
       <if_sid>500</if_sid>
@@ -237,6 +253,24 @@
     <group>attack, web, accesslog</group>
   </rule>
   
+  
+  <rule id="101030" level="0">
+    <if_sid>92213</if_sid>    
+    <match>chrome_Unpacker</match>
+    
+    <field name="win.eventdata.targetFilename" type="pcre2">msedge.exe$</field>
+
+    <description>Ignore	for Chrome Updater</description> 
+  </rule>    
+  
+  
+  <rule id="101031" level="0">
+    <if_sid>92213</if_sid>        
+    <field name="win.eventdata.image" type="pcre2">chrome.exe$</field>
+    <field name="win.eventdata.targetFilename" type="pcre2">^.*chrome_Unpacker.*</field>
+    <description>Ignore	for Chrome plugin unpacker</description> 
+  </rule>      
+  
 </group>
 
 <group name="Exclude_PS_Test">
@@ -258,6 +292,13 @@
     <if_sid>92213</if_sid>    
     <!--<field name="win.eventdata.image" type="pcre2">C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe</field>                                                   -->
     <field name="win.eventdata.targetFilename" type="pcre2">AppData\\\\Local\\\\Temp\\\\__PSScriptPolicyTest_*</field>
+    <description>Ignore PSScript PolicyTest</description>
+  </rule>   
+
+  <rule id="102018" level="0">
+    <if_sid>92205</if_sid>    
+
+    <field name="win.eventdata.targetFilename" type="pcre2">^.*Windows\\\\SystemTemp\\\\__PSScriptPolicyTest_.*</field>
     <description>Ignore PSScript PolicyTest</description>
   </rule>   
   
@@ -290,7 +331,7 @@
   <rule id="103005" level="10" frequency="100" timeframe="300">
     <if_matched_sid>64508</if_matched_sid>
     <same_field>srcip</same_field>
-    <description>Possible port scan detected from $(srcip)</description>
+    <description>Possible port scan detected.</description>
   </rule>     
   
   
