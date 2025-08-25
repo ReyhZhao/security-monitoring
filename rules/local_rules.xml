@@ -21,9 +21,7 @@
   </rule> 
   <rule id="61643" level="0" overwrite="yes">
     <description>Disabled rule 61643 - To many false</description>
-  </rule> 
-  
-  
+  </rule>
 </group>
 
 <group name="vulnerability-detector-custom">
