@@ -55,9 +55,6 @@
   <!--<plugin_decoder offset="after_prematch">JSON_Decoder</plugin_decoder>-->
 </decoder>
 
-
-###########################
-
 <decoder name="authentik">
   <program_name>fluentd</program_name>
   <prematch type="pcre2">.pod_name.*authentik-server-</prematch>
@@ -112,14 +109,14 @@
     <order>log_type, yara_rule, yara_scanned_file</order>
 </decoder>
 
-
-
 <decoder name="macOS_launchservicesd">
   <program_name>^launchservicesd</program_name>
 </decoder>
+
 <decoder name="macOS_ddaolimaki-daunito">
   <program_name>^ddaolimaki</program_name>
 </decoder>
+
 <decoder name="macOS_mDNSResponder">
   <program_name>^mDNSResponder</program_name>
 </decoder>
