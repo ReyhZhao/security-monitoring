@@ -1,0 +1,7 @@
+<group name="exceptions">
+  <rule id="200001" level="0">
+    <description>Suppress ps command alerts for agent 'daedalus' as this host performs routine system monitoring and the 'ps' command is expected.</description>
+    <if_sid>92604</if_sid>
+    <field name="agent.name">daedalus</field>
+  </rule>
+</group>
