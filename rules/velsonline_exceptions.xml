@@ -1,0 +1,7 @@
+<group name="exceptions">
+  <rule id="200000" level="0">
+    <description>Agent MacbookPro-M5 is frequently shut down or goes offline for maintenance; these disconnections are expected.</description>
+    <if_sid>504</if_sid>
+    <field name="agent.name">MacbookPro-M5</field>
+  </rule>
+</group>
