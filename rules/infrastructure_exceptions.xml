@@ -8,8 +8,4 @@
     <description>Error: Invalid Wazuh alert JSON input provided. Cannot extract rule details to propose exceptions.</description>
     <field name="agent.name">MacbookPro-M5</field>
   </rule>
-  <rule id="200003" level="0">
-    <description>The provided input was not a valid Wazuh alert JSON object. This is a placeholder exception rule as no alert details could be parsed.</description>
-    <if_sid>1000</if_sid>
-  </rule>
 </group>
