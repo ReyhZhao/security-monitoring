@@ -8,4 +8,9 @@
     <description>Error: Invalid Wazuh alert JSON input provided. Cannot extract rule details to propose exceptions.</description>
     <field name="agent.name">MacbookPro-M5</field>
   </rule>
+  <rule id="200004" level="0">
+    <description>Suppress ps command alerts on 'daedalus' as it's expected administrative or monitoring activity.</description>
+    <if_sid>92604</if_sid>
+    <field name="agent.name">daedalus</field>
+  </rule>
 </group>
